@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// --- MODÈLES (Adapte pou SQLite) ---
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String?  
+  role      String   @default("BUYER") // SQLite pa pran Enum, nou itilize String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  store            Store?
+  orders           Order[]   @relation("BuyerOrders")
+  wishlist         Product[] @relation("UserWishlist")
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  transactions     PaymentTransaction[]
+}
+
+model Store {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String   @unique
+  owner       User     @relation(fields: [ownerId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  products    Product[]
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  priceHtg    Float    
+  stock       Int      @default(0)
+  images      String   // SQLite pa pran String[], n ap sere l kòm yon sèl Tèks
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
+  orderItems  OrderItem[]
+  wishlistedBy User[]  @relation("UserWishlist")
+}
+
+model Order {
+  id            String        @id @default(uuid())
+  totalHtg      Float
+  status        String        @default("PENDING") 
+  paymentMethod String        
+  transactionId String?       
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  buyerId       String
+  buyer         User          @relation("BuyerOrders", fields: [buyerId], references: [id])
+  items         OrderItem[]
+  transactions  PaymentTransaction[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  quantity  Int
+  priceHtg  Float   
+
+  // Relations
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  content    String
+  isAutoReply Boolean @default(false) 
+  createdAt  DateTime @default(now())
+
+  // Relations
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model PaymentTransaction {
+  id            String   @id @default(uuid())
+  orderId       String?
+  order         Order?   @relation(fields: [orderId], references: [id])
+  amountHTG     Float
+  amountUSD     Float?
+  method        String   // MONCASH, NATCASH, STRIPE, PAYPAL, BALANCE
+  status        String   @default("PENDING") // PENDING, SUCCESSFUL, FAILED, REFUNDED
+  senderPhone   String?
+  transactionRef String? @unique
+  externalId    String?  // API gateway reference
+  createdAt     DateTime @default(now())
+  confirmedAt   DateTime?
+  failedAt      DateTime?
+  failureReason String?
+  metadata      String?  // JSON metadata
+  
+  // Relations
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+}

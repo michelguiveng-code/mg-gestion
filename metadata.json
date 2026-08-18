@@ -1,0 +1,6 @@
+{
+  "name": "MG Gestion",
+  "description": "Marketplace mobile haïtienne : achetez, vendez et gérez vos boutiques en toute sécurité avec MonCash et NatCash.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
