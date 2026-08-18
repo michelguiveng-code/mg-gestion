@@ -1,10 +1,11 @@
-import React, { FormEvent, useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
-  Home, Search, Plus, ShoppingBag, User as UserIcon, Settings, Store as StoreIcon, Globe,
-  ShieldCheck, CheckCircle2, ChevronRight, ArrowRight, X, Mail, Lock,
-  Eye, EyeOff, Package, Trash2, Edit3, Upload, Image as ImageIcon,
-  CreditCard, Phone, HelpCircle, RefreshCw, Loader2, Minus, Check,
-  MapPin, Receipt, ShoppingCart, MessageCircle, ExternalLink, Star,
+  Home,
+  Search,
+  Plus,
+  ShoppingBag,
+  User as UserIcon,
+  Store as StoreIcon,
 } from "lucide-react";
 
 const API = (((import.meta as any).env?.VITE_API_BASE_URL as string | undefined) || "/api/v1").replace(/\/$/, "");
@@ -14,7 +15,6 @@ const SUPPORT_PHONE_2 = "+50955528787";
 
 type Tab = "accueil" | "explorer" | "vann" | "panye" | "parametre";
 type Lang = "ht" | "fr";
-type AuthMode = "login" | "signup";
 
 type Product = {
   id: string;
@@ -57,34 +57,6 @@ type User = {
   store?: Store | null;
 };
 
-type CartItem = {
-  id: string;
-  productId: string;
-  product?: Product;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-};
-
-type Order = {
-  id: string;
-  status: string;
-  paymentStatus?: string;
-  paymentMethod?: string;
-  totalAmount: number;
-  createdAt?: string;
-};
-
-type ProductForm = {
-  name: string;
-  description: string;
-  price: string;
-  category: string;
-  location: string;
-  stock: string;
-  image: File | null;
-};
-
 const T = {
   ht: {
     appName: "MG GESTION",
@@ -94,75 +66,6 @@ const T = {
     sell: "Vann",
     cart: "Panye",
     settings: "Kont",
-    login: "Konekte",
-    signup: "Enskri",
-    logout: "Dekonekte",
-    search: "Chèche yon pwodui, yon sèvis, yon boutik...",
-    categories: "Kategori",
-    stores: "Boutik verifye",
-    products: "Pwodwi",
-    noProducts: "Pa gen pwodwi pou montre pou kounye a.",
-    noProductsDesc: "Lè vandè yo pibliye pwodwi, yo ap parèt isit la.",
-    addProduct: "Ajoute pwodwi",
-    myProducts: "Pwodwi mwen yo",
-    createStore: "Kreye boutik",
-    productName: "Non pwodwi a",
-    description: "Deskripsyon",
-    price: "Pri an HTG",
-    category: "Kategori",
-    location: "Kote",
-    stock: "Stock",
-    publish: "Pibliye pwodwi a",
-    update: "Mete ajou",
-    cancel: "Anile",
-    delete: "Efase",
-    addToCart: "Ajoute nan panye",
-    added: "Pwodwi a antre nan panye ou.",
-    emptyCart: "Panye ou vid.",
-    browse: "Gade pwodwi yo",
-    checkout: "Peye",
-    total: "Total",
-    subtotal: "Sou-total",
-    payment: "Mwayen peman",
-    moncash: "MonCash",
-    natcash: "NatCash",
-    pending: "An atant",
-    paid: "Peye",
-    failed: "Echwe",
-    orders: "Kòmand",
-    noOrders: "Ou poko gen kòmand.",
-    support: "Sipò MG Gestion",
-    supportText: "Kontakte ekip MG Gestion si ou bezwen asistans.",
-    call: "Rele sipò",
-    email: "Kontakte pa email",
-    security: "Sekirite ak konfidansyalite",
-    language: "Lang",
-    verify: "Verifye email ou",
-    codeSent: "Nou voye yon kòd 6 chif nan adrès email ou.",
-    code: "Antre kòd verifikasyon an",
-    resend: "Renvoye kòd la",
-    change: "Chanje email",
-    confirm: "Konfime",
-    continue: "Kontinye",
-    error: "Aksyon an pa fini. Verifye koneksyon ou epi eseye ankò.",
-    network: "Pa gen koneksyon ak sèvè a.",
-    successLogin: "Ou konekte avèk siksè.",
-    successProduct: "Pwodwi a pibliye avèk siksè.",
-    successUpdate: "Pwodwi a mete ajou.",
-    successDelete: "Pwodwi a efase.",
-    guest: "Konekte pou jwenn tout fonksyon kont ou.",
-    verified: "Verifye",
-    sales: "Vant",
-    rating: "Nòt",
-    available: "Disponib",
-    out: "Pa gen stock",
-    remove: "Retire",
-    back: "Retounen",
-    profile: "Pwofil",
-    storeName: "Non boutik",
-    storeDesc: "Deskripsyon boutik",
-    create: "Kreye",
-    supportNumber: "Telefòn",
   },
   fr: {
     appName: "MG GESTION",
@@ -172,88 +75,8 @@ const T = {
     sell: "Vendre",
     cart: "Panier",
     settings: "Compte",
-    login: "Connexion",
-    signup: "Inscription",
-    logout: "Se déconnecter",
-    search: "Rechercher un produit, un service, une boutique...",
-    categories: "Catégories",
-    stores: "Boutiques vérifiées",
-    products: "Produits",
-    noProducts: "Aucun produit à afficher pour le moment.",
-    noProductsDesc: "Les produits apparaîtront ici lorsque les vendeurs en publieront.",
-    addProduct: "Ajouter un produit",
-    myProducts: "Mes produits",
-    createStore: "Créer une boutique",
-    productName: "Nom du produit",
-    description: "Description",
-    price: "Prix en HTG",
-    category: "Catégorie",
-    location: "Localisation",
-    stock: "Stock",
-    publish: "Publier le produit",
-    update: "Mettre à jour",
-    cancel: "Annuler",
-    delete: "Supprimer",
-    addToCart: "Ajouter au panier",
-    added: "Produit ajouté au panier.",
-    emptyCart: "Votre panier est vide.",
-    browse: "Voir les produits",
-    checkout: "Payer",
-    total: "Total",
-    subtotal: "Sous-total",
-    payment: "Mode de paiement",
-    moncash: "MonCash",
-    natcash: "NatCash",
-    pending: "En attente",
-    paid: "Payé",
-    failed: "Échec",
-    orders: "Commandes",
-    noOrders: "Vous n'avez pas encore de commande.",
-    support: "Support MG Gestion",
-    supportText: "Contactez l'équipe MG Gestion si vous avez besoin d'assistance.",
-    call: "Appeler le support",
-    email: "Contacter par email",
-    security: "Sécurité et confidentialité",
-    language: "Langue",
-    verify: "Vérifiez votre email",
-    codeSent: "Un code à 6 chiffres a été envoyé à votre adresse email.",
-    code: "Entrez le code de vérification",
-    resend: "Renvoyer le code",
-    change: "Modifier l'email",
-    confirm: "Confirmer",
-    continue: "Continuer",
-    error: "L'action n'a pas abouti. Vérifiez votre connexion et réessayez.",
-    network: "Impossible de contacter le serveur.",
-    successLogin: "Connexion réussie.",
-    successProduct: "Produit publié avec succès.",
-    successUpdate: "Produit mis à jour.",
-    successDelete: "Produit supprimé.",
-    guest: "Connectez-vous pour accéder à toutes les fonctions de votre compte.",
-    verified: "Vérifiée",
-    sales: "Ventes",
-    rating: "Note",
-    available: "Disponible",
-    out: "Rupture de stock",
-    remove: "Retirer",
-    back: "Retour",
-    profile: "Profil",
-    storeName: "Nom de la boutique",
-    storeDesc: "Description de la boutique",
-    create: "Créer",
-    supportNumber: "Téléphone",
   },
 };
-
-const C = {
-  navy: "#0B1F3A",
-  blue: "#2F5FFF",
-  cyan: "#00C2D6",
-  white: "#FFFFFF",
-  black: "#0A0A0A",
-  gray: "#F3F5F8",
-};
-
-const cats = ["Teknoloji", "Enèji", "Rad & Mode", "Atizana", "Manje", "Sèvis"];
 
 function money(n: number) {
   return `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(Number(n) || 0)} HTG`;
@@ -295,4 +118,57 @@ async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new Error(typeof body === "string" ? body : body?.message || body?.error || `HTTP ${r.status}`);
   }
   return body as T;
+}
+
+export default function App() {
+  const [lang, setLang] = useState<Lang>("ht");
+  const [tab, setTab] = useState<Tab>("accueil");
+  const t = T[lang];
+
+  return (
+    <div className="min-h-screen bg-[#F3F5F8] pb-24 text-[#0A0A0A]">
+      <header className="bg-[#0B1F3A] text-white p-4 flex justify-between items-center shadow-md">
+        <div>
+          <h1 className="text-xl font-bold tracking-wide">{t.appName}</h1>
+          <p className="text-xs text-cyan-400">{t.tagline}</p>
+        </div>
+        <button
+          onClick={() => setLang(lang === "ht" ? "fr" : "ht")}
+          className="text-xs font-semibold bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/20 transition"
+        >
+          {lang.toUpperCase()}
+        </button>
+      </header>
+
+      <main className="p-4 max-w-4xl mx-auto">
+        <div className="bg-white p-6 rounded-2xl shadow-sm text-center my-6 border border-gray-100">
+          <h2 className="text-2xl font-bold text-[#0B1F3A] mb-2">{t.appName}</h2>
+          <p className="text-gray-600 text-sm">{t.tagline}</p>
+        </div>
+      </main>
+
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 flex justify-around shadow-lg z-50">
+        <button onClick={() => setTab("accueil")} className={`flex flex-col items-center text-xs font-medium ${tab === "accueil" ? "text-[#2F5FFF]" : "text-gray-500"}`}>
+          <Home className="w-5 h-5 mb-1" />
+          {t.home}
+        </button>
+        <button onClick={() => setTab("explorer")} className={`flex flex-col items-center text-xs font-medium ${tab === "explorer" ? "text-[#2F5FFF]" : "text-gray-500"}`}>
+          <Search className="w-5 h-5 mb-1" />
+          {t.explorer}
+        </button>
+        <button onClick={() => setTab("vann")} className={`flex flex-col items-center text-xs font-medium ${tab === "vann" ? "text-[#2F5FFF]" : "text-gray-500"}`}>
+          <Plus className="w-5 h-5 mb-1" />
+          {t.sell}
+        </button>
+        <button onClick={() => setTab("panye")} className={`flex flex-col items-center text-xs font-medium ${tab === "panye" ? "text-[#2F5FFF]" : "text-gray-500"}`}>
+          <ShoppingBag className="w-5 h-5 mb-1" />
+          {t.cart}
+        </button>
+        <button onClick={() => setTab("parametre")} className={`flex flex-col items-center text-xs font-medium ${tab === "parametre" ? "text-[#2F5FFF]" : "text-gray-500"}`}>
+          <UserIcon className="w-5 h-5 mb-1" />
+          {t.settings}
+        </button>
+      </nav>
+    </div>
+  );
 }
