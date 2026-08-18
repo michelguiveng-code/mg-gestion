@@ -7,8 +7,8 @@ import {
   MapPin, Receipt, ShoppingCart, MessageCircle, ExternalLink, Star,
 } from "lucide-react";
 
-const API = ((import.meta.env.VITE_API_BASE_URL as string | undefined) || "/api/v1").replace(/\/$/, "");
-const SUPPORT_EMAIL = (import.meta.env.VITE_SUPPORT_EMAIL as string | undefined) || "support@mggestion.ht";
+const API = (((import.meta as any).env?.VITE_API_BASE_URL as string | undefined) || "/api/v1").replace(/\/$/, "");
+const SUPPORT_EMAIL = ((import.meta as any).env?.VITE_SUPPORT_EMAIL as string | undefined) || "support@mggestion.ht";
 const SUPPORT_PHONE_1 = "+50942292126";
 const SUPPORT_PHONE_2 = "+50955528787";
 
